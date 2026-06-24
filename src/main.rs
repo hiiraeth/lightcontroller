@@ -1,13 +1,28 @@
 use std::io::{stdout, Write};
 use std::collections::HashMap;
 
-struct Light {
-    brightness: f32,
-    state: bool
+enum State {
+    On,
+    Off
 }
 
+impl std::fmt::Display for State {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            State::On => { write!(f, "on") },
+            State::Off => { write!(f, "off") }
+        }
+    }
+}
+
+struct Light {
+    brightness: f32,
+    state: State
+}
+
+
 impl Light {
-    fn new(brightness: f32, state: bool) -> Light {
+    fn new(brightness: f32, state: State) -> Light {
         Light {brightness, state}
     }
 
@@ -26,7 +41,10 @@ impl Light {
     }
 
     fn toggle_state(&mut self) {
-        self.state = !self.state;
+        match self.state {
+            State::Off => { self.state = State::On },
+            State::On => { self.state = State::Off }
+        }
     }
 
     fn get_all(&self) -> String {
@@ -57,6 +75,7 @@ fn menu(lights: &mut HashMap<String, Light>) {
               | 1. Set brightness\n\
               | 2. Toggle light on/off\n\
               | 3. Add new light\n\
+              | 4. List all lights\n\
               Choice: ");
 
     match choice.trim() {
@@ -91,10 +110,10 @@ fn menu(lights: &mut HashMap<String, Light>) {
             };
 
             let state_str = prompt("State (1 for on, 0 for off): ");
-            let state: bool;
+            let state: State;
             match state_str.trim() {
-                "1" => { state = true; }
-                "0" => { state = false; }
+                "1" => { state = State::On; }
+                "0" => { state = State::Off; }
                 _ => { println!("Invalid input"); return }
             }
 
@@ -104,6 +123,11 @@ fn menu(lights: &mut HashMap<String, Light>) {
                 Some(_) => println!("Replaced existing light.")
             }
         }
+        "4" => {
+            for (name, light) in lights {
+                println!("{}{}\n", name, light.get_all());
+            }
+        }
         _ => println!("Invalid choice!"),
     }
 }
@@ -111,8 +135,8 @@ fn menu(lights: &mut HashMap<String, Light>) {
 fn main() {
     let mut lights: HashMap<String, Light> = HashMap::new();
 
-    let desk_light = Light::new(68.0, true);
-    let overhead_light = Light::new(75.0, false);
+    let desk_light = Light::new(68.0, State::On);
+    let overhead_light = Light::new(75.0, State::Off);
 
     lights.insert("desktop".to_string(), desk_light);
     lights.insert("overhead".to_string(), overhead_light);
